@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>C / C++ → EXE</title>
+<style>
+  :root {
+    --bg: #11140F;
+    --surface: #181D14;
+    --surface-2: #1F261A;
+    --border: #333D28;
+    --border-soft: #262E1E;
+    --accent: #E0973D;
+    --accent-dim: #8A5F27;
+    --accent-text: #1A1206;
+    --secondary: #6FBF73;
+    --text: #EDEAE2;
+    --text-dim: #9BA08F;
+    --text-faint: #636B57;
+    --error: #D9684C;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    flex: 0 0 auto;
+  }
+
+  .brand {
+    font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    color: var(--text);
+  }
+  .brand span { color: var(--accent); }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--surface);
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-faint);
+    transition: background .2s;
+  }
+  .status-dot.ok { background: var(--secondary); box-shadow: 0 0 6px color-mix(in srgb, var(--secondary) 70%, transparent); }
+  .status-dot.bad { background: var(--error); }
+
+  /* ---------- main ---------- */
+  main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px 20px;
+    min-height: 0;
+    gap: 14px;
+  }
+
+  .dropzone {
+    flex: 0 0 auto;
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 22px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .dropzone:hover { border-color: var(--accent-dim); }
+  .dropzone.drag { border-color: var(--accent); background: var(--surface-2); }
+  .dropzone.filled { border-style: solid; }
+
+  .dropzone-icon {
+    flex: 0 0 auto;
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--accent);
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 16px;
+  }
+
+  .dropzone-text { min-width: 0; }
+  .dropzone-title {
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .dropzone-sub {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  /* ---------- options ---------- */
+  .options {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .chip input { display: none; }
+  .chip .box {
+    width: 13px; height: 13px;
+    border: 1.5px solid var(--text-faint);
+    border-radius: 3px;
+    flex: 0 0 auto;
+    position: relative;
+    transition: border-color .15s, background .15s;
+  }
+  .chip input:checked ~ .box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .chip input:checked ~ .box::after {
+    content: "";
+    position: absolute;
+    left: 3px; top: 0px;
+    width: 4px; height: 8px;
+    border: solid var(--accent-text);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .chip:has(input:checked) { color: var(--text); border-color: var(--accent-dim); }
+
+  /* ---------- actions ---------- */
+  .actions {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 7px;
+    padding: 9px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s, background .15s, opacity .15s, transform .05s;
+  }
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button:disabled:active { transform: none; }
+
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  button.primary:hover:not(:disabled) { background: #ECA454; }
+
+  button.ghost:hover:not(:disabled) { border-color: var(--text-faint); }
+
+  .spacer { flex: 1; }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12.5px;
+    padding: 6px 4px;
+    text-decoration: none;
+  }
+  .link-btn:hover { text-decoration: underline; }
+
+  /* ---------- terminal ---------- */
+  .terminal-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0D100B;
+  }
+  .terminal-head {
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    font-family: 'Cascadia Code', Consolas, monospace;
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--surface);
+  }
+  .terminal {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 12px 14px;
+    font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #C9D1BC;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .terminal .ln-err { color: var(--error); }
+  .terminal .ln-ok { color: var(--secondary); }
+  .terminal::-webkit-scrollbar { width: 10px; }
+  .terminal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  .terminal::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">⚡ <span>C / C++</span> &nbsp;→&nbsp; EXE</div>
+    <div class="status-pill">
+      <span id="statusDot" class="status-dot"></span>
+      <span id="statusText">проверка компилятора…</span>
+    </div>
+  </header>
+
+  <main>
+    <div id="dropzone" class="dropzone">
+      <div class="dropzone-icon">{ }</div>
+      <div class="dropzone-text">
+        <div id="dzTitle" class="dropzone-title">Перетащи .c / .cpp сюда или нажми, чтобы выбрать</div>
+        <div class="dropzone-sub">Поддерживаются .c, .cpp, .cc, .cxx</div>
+      </div>
+    </div>
+
+    <div class="options">
+      <label class="chip">
+        <input type="checkbox" id="optStatic" checked />
+        <span class="box"></span> Один exe без DLL (-static)
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optOpt" checked />
+        <span class="box"></span> Оптимизация (-O2)
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optGui" />
+        <span class="box"></span> Без чёрного окна (-mwindows)
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optPause" checked />
+        <span class="box"></span> Пауза при выходе (.bat)
+      </label>
+    </div>
+
+    <div class="actions">
+      <button id="btnBuild" class="primary">Собрать exe</button>
+      <button id="btnRun" class="ghost" disabled>Запустить</button>
+      <button id="btnFolder" class="ghost" disabled>Открыть папку</button>
+      <div class="spacer"></div>
+      <button id="btnInstall" class="link-btn">Установить компилятор</button>
+    </div>
+
+    <div class="terminal-wrap">
+      <div class="terminal-head">вывод</div>
+      <div id="terminal" class="terminal"></div>
+    </div>
+  </main>
+
+<script>
+  const bridge = window.chrome && window.chrome.webview;
+
+  function send(obj) {
+    if (bridge) bridge.postMessage(obj);
+  }
+
+  const dropzone = document.getElementById('dropzone');
+  const dzTitle = document.getElementById('dzTitle');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const terminal = document.getElementById('terminal');
+  const btnBuild = document.getElementById('btnBuild');
+  const btnRun = document.getElementById('btnRun');
+  const btnFolder = document.getElementById('btnFolder');
+  const btnInstall = document.getElementById('btnInstall');
+  const optStatic = document.getElementById('optStatic');
+  const optOpt = document.getElementById('optOpt');
+  const optGui = document.getElementById('optGui');
+  const optPause = document.getElementById('optPause');
+
+  let hasFile = false;
+
+  function logLine(text) {
+    const div = document.createElement('div');
+    if (/error|ошибка/i.test(text)) div.className = 'ln-err';
+    else if (/готово|done/i.test(text)) div.className = 'ln-ok';
+    div.textContent = text;
+    terminal.appendChild(div);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  dropzone.addEventListener('click', () => send({ type: 'browse' }));
+
+  btnBuild.addEventListener('click', () => {
+    if (!hasFile) return;
+    send({
+      type: 'build',
+      opts: {
+        static: optStatic.checked,
+        opt: optOpt.checked,
+        gui: optGui.checked,
+        pauseBat: optPause.checked
+      }
+    });
+  });
+
+  btnRun.addEventListener('click', () => send({ type: 'run' }));
+  btnFolder.addEventListener('click', () => send({ type: 'openFolder' }));
+  btnInstall.addEventListener('click', () => send({ type: 'installCompiler' }));
+
+  if (bridge) {
+    bridge.addEventListener('message', (e) => {
+      let msg;
+      try { msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }
+      catch { return; }
+
+      switch (msg.type) {
+        case 'status': {
+          const ok = msg.gccFound && msg.gppFound;
+          statusDot.className = 'status-dot ' + (ok ? 'ok' : 'bad');
+          statusText.textContent = ok
+            ? 'gcc / g++ найдены'
+            : 'компилятор не найден';
+          break;
+        }
+        case 'fileSelected': {
+          hasFile = true;
+          dzTitle.textContent = msg.name;
+          dropzone.classList.add('filled');
+          btnRun.disabled = true;
+          btnFolder.disabled = true;
+          break;
+        }
+        case 'dragState': {
+          dropzone.classList.toggle('drag', msg.state === 'over');
+          break;
+        }
+        case 'log': {
+          logLine(msg.text);
+          break;
+        }
+        case 'buildStart': {
+          terminal.innerHTML = '';
+          btnBuild.disabled = true;
+          btnRun.disabled = true;
+          btnFolder.disabled = true;
+          break;
+        }
+        case 'buildResult': {
+          btnBuild.disabled = false;
+          if (msg.success) {
+            btnRun.disabled = false;
+            btnFolder.disabled = false;
+          }
+          break;
+        }
+      }
+    });
+
+    send({ type: 'ready' });
+  } else {
+    statusText.textContent = 'нет связи с приложением';
+  }
+</script>
+
+</body>
+</html>
