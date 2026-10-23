@@ -31,9 +31,8 @@
 ## Сборка
 
 ```bash
-git clone <ссылка-на-этот-репозиторий>
-cd CppToExe
-Build.bat
+Скачайте код данного проекта
+запустите build.but
 ```
 
 Готовый файл появится в `publish\CppToExe.exe`.
